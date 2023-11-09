@@ -15,6 +15,8 @@ const columns = [{
 }, {
   key: 'quantity',
   label: 'Quantity'
+}, {
+  key: 'actions'
 }];
 
 const cargoData = ref([{
@@ -33,6 +35,9 @@ const cargoData = ref([{
   quantity: '8,000 MT'
 }] || JSON.parse(localStorage.getItem('cargoData')));
 
+const cargoItems = ['Corns', 'Soy Beans', 'Rice', 'Wheat'];
+const selectedCargoItems = ref(cargoItems[0])
+
 const state = reactive({
   portOfCall: '',
   seaCraft: '',
@@ -43,12 +48,12 @@ const state = reactive({
 
 const insertCargoDatum = () => {
   const newRow = {
-    id: cargoData.length + 1,
+    id: Date.now(),
     portOfCall: state.portOfCall,
     seaCraft: state.seaCraft,
     voyageCode: state.voyageCode,
-    cargo: state.cargo,
-    quantity: state.quantity
+    cargo: selectedCargoItems.value,
+    quantity: state.quantity + ' MT'
   }
 
   cargoData.value.push(newRow)
@@ -59,8 +64,29 @@ const insertCargoDatum = () => {
   state.voyageCode = '';
   state.cargo = '';
   state.quantity = '';
-
 }
+
+const deleteCargoDatum = (id) => {
+  const index = cargoData.value.findIndex(item => item.id === id);
+  if (index !== -1) {
+    cargoData.value.splice(index, 1);
+    localStorage.setItem('cargoData', JSON.stringify(cargoData.value));
+  }
+}
+
+const menuItems = (row) => [
+  [
+    {
+      label: 'Edit',
+      icon: 'i-heroicons-pencil-square-20-solid',
+    },
+    {
+      label: 'Delete',
+      icon: 'i-heroicons-trash-20-solid',
+      click: () => deleteCargoDatum(row.id)
+    }
+  ]
+];
 
 </script>
 
@@ -90,8 +116,9 @@ const insertCargoDatum = () => {
                 <UInput v-model='state.voyageCode' type='text' />
               </UFormGroup>
 
-              <UFormGroup label='Cargo' name='cargo'>
-                <UInput v-model='state.cargo' type='text' />
+              <UFormGroup>
+                <label>Cargo</label>
+                <USelectMenu v-model='selectedCargoItems' :options='cargoItems' />
               </UFormGroup>
 
               <UFormGroup label='Quantity (MT)' name='quantity'>
@@ -109,7 +136,13 @@ const insertCargoDatum = () => {
 
     <UContainer class='w-full'>
       <UCard>
-        <UTable :columns='columns' :rows='cargoData' />
+        <UTable :columns='columns' :rows='cargoData'>
+          <template #actions-data='{ row }'>
+            <UDropdown :items='menuItems(row)'>
+              <UButton color='gray' variant='ghost' icon='i-heroicons-ellipsis-horizontal-20-solid' />
+            </UDropdown>
+          </template>
+        </UTable>
       </UCard>
     </UContainer>
   </div>
