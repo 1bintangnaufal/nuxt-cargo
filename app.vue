@@ -1,5 +1,6 @@
 <script setup>
 
+// Table header
 const columns = [{
   key: 'portOfCall',
   label: 'Port Of Call'
@@ -19,33 +20,37 @@ const columns = [{
   key: 'actions'
 }];
 
+// Table row dummy data
 const cargoData = ref([{
   id: 1,
   portOfCall: 'Shanghai, China',
   seaCraft: 'Seas the Day',
   voyageCode: 'SCSTD15',
   cargo: 'Corns',
-  quantity: '10,000 MT'
+  quantity: '10000 MT'
 }, {
   id: 2,
   portOfCall: 'Singapore',
   seaCraft: 'On the Docks',
   voyageCode: 'SIOTD25',
   cargo: 'Soy Beans',
-  quantity: '8,000 MT'
+  quantity: '8000 MT'
 }] || JSON.parse(localStorage.getItem('cargoData')));
 
+// Options for select input
 const cargoItems = ['Corns', 'Soy Beans', 'Rice', 'Wheat'];
 const selectedCargoItems = ref(cargoItems[0])
 
+// Initial form values for adding a new row (empty)
 const state = reactive({
   portOfCall: '',
   seaCraft: '',
   voyageCode: '',
   cargo: '',
-  quantity: ''
+  quantity: 0
 });
 
+// Execute creating a new row
 const insertCargoDatum = () => {
   const newRow = {
     id: Date.now(),
@@ -55,17 +60,18 @@ const insertCargoDatum = () => {
     cargo: selectedCargoItems.value,
     quantity: state.quantity + ' MT'
   }
-
   cargoData.value.push(newRow)
   localStorage.setItem('cargoData', JSON.stringify(cargoData.value));
 
+  // Set form back to empty after submit
   state.portOfCall = '';
   state.seaCraft = '';
   state.voyageCode = '';
   state.cargo = '';
-  state.quantity = '';
+  state.quantity = 0;
 }
 
+// Delete a row
 const deleteCargoDatum = (id) => {
   const index = cargoData.value.findIndex(item => item.id === id);
   if (index !== -1) {
@@ -74,11 +80,51 @@ const deleteCargoDatum = (id) => {
   }
 }
 
+// Modal trigger
+const isModalOpen = ref(false);
+
+// Initial state for updating a row, need ID
+const updateState = reactive({
+  id: null,
+  portOfCall: '',
+  seaCraft: '',
+  voyageCode: '',
+  cargo: '',
+  quantity: 0
+})
+
+// Previous row data about to be updated
+const previousData = (row) => {
+  updateState.id = row.id;
+  updateState.portOfCall = row.portOfCall;
+  updateState.seaCraft = row.seaCraft;
+  updateState.voyageCode = row.voyageCode;
+  selectedCargoItems.value = row.cargo;
+  updateState.quantity = parseFloat(row.quantity);
+  isModalOpen.value = true;
+}
+
+// Execute updating row values
+const updateCargoDatum = () => {
+  const index = cargoData.value.findIndex(item => item.id === updateState.id);
+  if (index !== -1) {
+    updateState.cargo = selectedCargoItems.value;
+    cargoData.value[index] = { ...updateState };
+    localStorage.setItem('cargoData', JSON.stringify(cargoData.value));
+    isModalOpen.value = false;
+  }
+}
+
+// Dropdown actions
 const menuItems = (row) => [
   [
     {
       label: 'Edit',
       icon: 'i-heroicons-pencil-square-20-solid',
+      click: () => {
+        isModalOpen.value = true;
+        previousData(row);
+      }
     },
     {
       label: 'Delete',
@@ -145,5 +191,34 @@ const menuItems = (row) => [
         </UTable>
       </UCard>
     </UContainer>
+
+    <UModal v-model='isModalOpen'>
+      <div class='p-4'>
+        <UForm :state='updateState'>
+          <UFormGroup label='Port of Call' name='portOfCall'>
+            <UInput v-model='updateState.portOfCall' type='text' />
+          </UFormGroup>
+
+          <UFormGroup label='Sea Craft' name='seaCraft'>
+            <UInput v-model='updateState.seaCraft' type='text' />
+          </UFormGroup>
+
+          <UFormGroup label='Voyage Code' name='voyageCode'>
+            <UInput v-model='updateState.voyageCode' type='text' />
+          </UFormGroup>
+
+          <UFormGroup>
+            <label>Cargo</label>
+            <USelectMenu v-model='selectedCargoItems' :options='cargoItems' />
+          </UFormGroup>
+
+          <UFormGroup label='Quantity (MT)' name='quantity'>
+            <UInput v-model='updateState.quantity' type='number' />
+          </UFormGroup>
+
+          <UButton @click='updateCargoDatum' class='mt-4'>Update</UButton>
+        </UForm>
+      </div>
+    </UModal>
   </div>
 </template>
