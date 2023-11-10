@@ -193,8 +193,8 @@ const menuItems = (row) => [
     </UContainer>
 
     <UModal v-model='isModalOpen'>
-      <div class='p-4'>
-        <UForm :state='updateState'>
+      <UForm :state='updateState'>
+        <div class='p-10 flex flex-col gap-5'>
           <UFormGroup label='Port of Call' name='portOfCall'>
             <UInput v-model='updateState.portOfCall' type='text' />
           </UFormGroup>
@@ -216,9 +216,9 @@ const menuItems = (row) => [
             <UInput v-model='updateState.quantity' type='number' />
           </UFormGroup>
 
-          <UButton @click='updateCargoDatum' class='mt-4'>Update</UButton>
-        </UForm>
-      </div>
+          <UButton @click='updateCargoDatum' class='mt-4 justify-center'>Update</UButton>
+        </div>
+      </UForm>
     </UModal>
   </div>
 </template>
